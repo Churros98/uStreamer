@@ -47,6 +47,7 @@
 #include "encoder.h"
 #include "stream.h"
 #include "http/server.h"
+#include "reverse_tcp/client.h"
 #ifdef WITH_GPIO
 #	include "gpio/gpio.h"
 #endif
