@@ -61,7 +61,7 @@ static void *_stream_loop_thread(void *arg) {
 	return NULL;
 }
 
-static void *_tcp_loop_thread(UNUSED void *arg) {
+static void *_reversetcp_loop_thread(void *arg) {
 	US_THREAD_RENAME("tcp");
 	_block_thread_signals();
 	us_reversetcp_loop(_g_reversetcp);
@@ -107,10 +107,10 @@ int main(int argc, char *argv[]) {
 
 		pthread_t stream_loop_tid;
 		if (options->reverse_tcp) {
-			pthread_t tcp_loop_tid;
+			pthread_t reversetcp_loop_tid;
 			US_THREAD_CREATE(stream_loop_tid, _stream_loop_thread, NULL);
-			US_THREAD_CREATE(tcp_loop_tid, _tcp_loop_thread, NULL);
-			US_THREAD_JOIN(tcp_loop_tid);
+			US_THREAD_CREATE(reversetcp_loop_tid, _reversetcp_loop_thread, NULL);
+			US_THREAD_JOIN(reversetcp_loop_tid);
 			US_THREAD_JOIN(stream_loop_tid);
 		} else {
 			if ((exit_code = us_server_listen(_g_server)) == 0) {
