@@ -31,8 +31,6 @@
 #include "../../libs/ring.h"
 
 #define _RUN(x_next)	tcp->run->x_next
-#define _STREAM(x_next)	_RUN(stream->x_next)
-#define _VID(x_next)	_STREAM(run->video->x_next)
 
 us_reversetcp_s *us_reversetcp_init(us_stream_s *stream) {
 	us_reversetcp_runtime_s *run;
@@ -104,11 +102,11 @@ void us_reversetcp_loop(us_reversetcp_s *tcp) {
         if (ri >= 0) {
             const us_frame_s *const frame = ring->items[ri];
 
-            if (send(_RUN(sockfd), (const void *)&_VID(frame->used), sizeof(size_t), 0) < 0) {
+            if (send(_RUN(sockfd), (const void *)&frame->used, sizeof(size_t), 0) < 0) {
                 goto socketerror;
             }
 
-            if (send(_RUN(sockfd), (const void *)_VID(frame->data), _VID(frame->used), 0) < 0) {
+            if (send(_RUN(sockfd), (const void *)frame->data, frame->used, 0) < 0) {
                 socketerror:
                 US_LOG_ERROR("Unable to send message, server disconnected (%i).", errno)
                 US_LOG_ERROR("Retrying in %u second(s).", tcp->retry_sec)
@@ -118,7 +116,7 @@ void us_reversetcp_loop(us_reversetcp_s *tcp) {
                 usleep(1000000 * tcp->retry_sec);
                 continue;
             } else {
-                US_LOG_DEBUG("TCP Packet send (Typical size: %lu bytes).", _VID(frame->used))
+                US_LOG_DEBUG("TCP Packet send (Typical size: %lu bytes).", frame->used)
                 _RUN(fps_sended) = _RUN(fps_sended) + 1;
             }
 
