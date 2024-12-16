@@ -52,6 +52,8 @@ enum _US_OPT_VALUES {
 #	ifdef WITH_SYSTEMD
 	_O_SYSTEMD = 'S',
 #	endif
+	_O_REVERSETCP = 'Z',
+	_O_RETRY_SEC = 'x',
 	_O_DROP_SAME_FRAMES = 'e',
 	_O_FAKE_RESOLUTION = 'R',
 
@@ -178,6 +180,8 @@ static const struct option _LONG_OPTS[] = {
 	{"unix",					required_argument,	NULL,	_O_UNIX},
 	{"unix-rm",					no_argument,		NULL,	_O_UNIX_RM},
 	{"unix-mode",				required_argument,	NULL,	_O_UNIX_MODE},
+	{"reverse-tcp",				no_argument,		NULL,	_O_REVERSETCP},
+	{"retry-sec",				required_argument,	NULL,	_O_RETRY_SEC},
 #	ifdef WITH_SYSTEMD
 	{"systemd",					no_argument,		NULL,	_O_SYSTEMD},
 #	endif
@@ -252,7 +256,7 @@ static int _parse_resolution(const char *str, unsigned *width, unsigned *height,
 static int _check_instance_id(const char *str);
 
 static void _features(void);
-static void _help(FILE *fp, const us_capture_s *cap, const us_encoder_s *enc, const us_stream_s *stream, const us_server_s *server);
+static void _help(FILE *fp, const us_capture_s *cap, const us_encoder_s *enc, const us_stream_s *stream, const us_server_s *server, const us_reversetcp_s *tcp);
 
 
 us_options_s *us_options_init(unsigned argc, char *argv[]) {
@@ -260,6 +264,7 @@ us_options_s *us_options_init(unsigned argc, char *argv[]) {
 	US_CALLOC(options, 1);
 	options->argc = argc;
 	options->argv = argv;
+	options->reverse_tcp = false;
 
 	US_CALLOC(options->argv_copy, argc);
 	for (unsigned index = 0; index < argc; ++index) {
@@ -285,7 +290,7 @@ void us_options_destroy(us_options_s *options) {
 }
 
 
-int options_parse(us_options_s *options, us_capture_s *cap, us_encoder_s *enc, us_stream_s *stream, us_server_s *server) {
+int options_parse(us_options_s *options, us_capture_s *cap, us_encoder_s *enc, us_stream_s *stream, us_server_s *server, us_reversetcp_s *tcp) {
 #	define OPT_SET(x_dest, x_value) { \
 			x_dest = x_value; \
 			break; \
@@ -429,9 +434,20 @@ int options_parse(us_options_s *options, us_capture_s *cap, us_encoder_s *enc, u
 			case _O_ROTATE:				 	OPT_CTL_MANUAL(rotate);
 			case _O_FLIP_VERTICAL:			OPT_CTL_MANUAL(flip_vertical);
 			case _O_FLIP_HORIZONTAL:		OPT_CTL_MANUAL(flip_horizontal);
-
-			case _O_HOST:				OPT_SET(server->host, optarg);
-			case _O_PORT:				OPT_NUMBER("--port", server->port, 1, 65535, 0);
+			case _O_REVERSETCP:			OPT_SET(options->reverse_tcp, true);
+			case _O_RETRY_SEC:			OPT_NUMBER("--retry-sec", tcp->retry_sec, 1, 3600, 0);
+			case _O_HOST:
+				if (options->reverse_tcp) {
+					OPT_SET(tcp->host, optarg);
+				} else {
+					OPT_SET(server->host, optarg);
+				}
+			case _O_PORT:				
+				if (options->reverse_tcp) {
+					OPT_NUMBER("--port", tcp->port, 1, 65535, 0);
+				} else {
+					OPT_NUMBER("--port", server->port, 1, 65535, 0);
+				}
 			case _O_UNIX:				OPT_SET(server->unix_path, optarg);
 			case _O_UNIX_RM:			OPT_SET(server->unix_rm, true);
 			case _O_UNIX_MODE:			OPT_NUMBER("--unix-mode", server->unix_mode, INT_MIN, INT_MAX, 8);
@@ -503,7 +519,7 @@ int options_parse(us_options_s *options, us_capture_s *cap, us_encoder_s *enc, u
 			case _O_FORCE_LOG_COLORS:	OPT_SET(us_g_log_colored, true);
 			case _O_NO_LOG_COLORS:		OPT_SET(us_g_log_colored, false);
 
-			case _O_HELP:		_help(stdout, cap, enc, stream, server); return 1;
+			case _O_HELP:		_help(stdout, cap, enc, stream, server, tcp); return 1;
 			case _O_VERSION:	puts(US_VERSION); return 1;
 			case _O_FEATURES:	_features(); return 1;
 
@@ -612,7 +628,7 @@ static void _features(void) {
 #	endif
 }
 
-static void _help(FILE *fp, const us_capture_s *cap, const us_encoder_s *enc, const us_stream_s *stream, const us_server_s *server) {
+static void _help(FILE *fp, const us_capture_s *cap, const us_encoder_s *enc, const us_stream_s *stream, const us_server_s *server, const us_reversetcp_s *tcp) {
 #	define SAY(x_msg, ...) fprintf(fp, x_msg "\n", ##__VA_ARGS__)
 	SAY("\nuStreamer - Lightweight and fast MJPEG-HTTP streamer");
 	SAY("═══════════════════════════════════════════════════");
@@ -708,6 +724,12 @@ static void _help(FILE *fp, const us_capture_s *cap, const us_encoder_s *enc, co
 	SAY("    --instance-id <str>  ──────── A short string identifier to be displayed in the /state handle.");
 	SAY("                                  It must satisfy regexp ^[a-zA-Z0-9\\./+_-]*$. Default: an empty string.\n");
 	SAY("    --server-timeout <sec>  ───── Timeout for client connections. Default: %u.\n", server->timeout);
+	SAY("Reverse TCP options:");
+	SAY("════════════════════");
+	SAY("    -Z|--reverse-tcp  ───────────────────────── Disable HTTP Server and send JPEG Frame over TCP. Default: false.\n");
+	SAY("    -s|--host <address>  ────────────────── Coonnect on Hostname or IP. Default: %s.\n", tcp->host);
+	SAY("    -p|--port <N>  ──────────────────────── Connection port. Default: %u.\n", tcp->port);
+	SAY("    -x|--retry-sec <N>  ──────────────────────── Time in second(s) before retry to connect if failure. Default: %u.\n", tcp->retry_sec);
 #	define ADD_SINK(x_name, x_opt) \
 		SAY(x_name " sink options:"); \
 		SAY("══════════════════"); \

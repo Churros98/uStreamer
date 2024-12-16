@@ -35,6 +35,7 @@
 #include "encoder.h"
 #include "stream.h"
 #include "http/server.h"
+#include "reverse_tcp/client.h"
 #ifdef WITH_GPIO
 #	include "gpio/gpio.h"
 #endif
@@ -42,7 +43,7 @@
 
 static us_stream_s	*_g_stream = NULL;
 static us_server_s	*_g_server = NULL;
-
+static us_reversetcp_s *_g_reversetcp = NULL;
 
 static void _block_thread_signals(void) {
 	sigset_t mask;
@@ -57,6 +58,13 @@ static void *_stream_loop_thread(void *arg) {
 	US_THREAD_SETTLE("stream");
 	_block_thread_signals();
 	us_stream_loop(_g_stream);
+	return NULL;
+}
+
+static void *_tcp_loop_thread(UNUSED void *arg) {
+	US_THREAD_RENAME("tcp");
+	_block_thread_signals();
+	us_reversetcp_loop(_g_reversetcp);
 	return NULL;
 }
 
@@ -89,7 +97,7 @@ int main(int argc, char *argv[]) {
 	_g_stream = us_stream_init(cap, enc);
 	_g_server = us_server_init(_g_stream);
 
-	if ((exit_code = options_parse(options, cap, enc, _g_stream, _g_server)) == 0) {
+	if ((exit_code = options_parse(options, cap, enc, _g_stream, _g_server, _g_reversetcp)) == 0) {
 		us_stream_update_blank(_g_stream, cap);
 #		ifdef WITH_GPIO
 		us_gpio_init();
@@ -97,17 +105,25 @@ int main(int argc, char *argv[]) {
 
 		us_install_signals_handler(_signal_handler, true);
 
-		if ((exit_code = us_server_listen(_g_server)) == 0) {
-#			ifdef WITH_GPIO
-			us_gpio_set_prog_running(true);
-#			endif
-
-			pthread_t stream_loop_tid;
-			pthread_t server_loop_tid;
+		pthread_t stream_loop_tid;
+		if (options->reverse_tcp) {
+			pthread_t tcp_loop_tid;
 			US_THREAD_CREATE(stream_loop_tid, _stream_loop_thread, NULL);
-			US_THREAD_CREATE(server_loop_tid, _server_loop_thread, NULL);
-			US_THREAD_JOIN(server_loop_tid);
+			US_THREAD_CREATE(tcp_loop_tid, _tcp_loop_thread, NULL);
+			US_THREAD_JOIN(tcp_loop_tid);
 			US_THREAD_JOIN(stream_loop_tid);
+		} else {
+			if ((exit_code = us_server_listen(_g_server)) == 0) {
+	#			ifdef WITH_GPIO
+				us_gpio_set_prog_running(true);
+	#			endif
+
+				pthread_t server_loop_tid;
+				US_THREAD_CREATE(stream_loop_tid, _stream_loop_thread, NULL);
+				US_THREAD_CREATE(server_loop_tid, _server_loop_thread, NULL);
+				US_THREAD_JOIN(server_loop_tid);
+				US_THREAD_JOIN(stream_loop_tid);
+			}
 		}
 
 #		ifdef WITH_GPIO
@@ -116,6 +132,7 @@ int main(int argc, char *argv[]) {
 #		endif
 	}
 
+	us_reversetcp_destroy(_g_reversetcp);
 	us_server_destroy(_g_server);
 	us_stream_destroy(_g_stream);
 	us_encoder_destroy(enc);

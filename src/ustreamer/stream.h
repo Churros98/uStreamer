@@ -91,6 +91,10 @@ typedef struct {
 	us_drm_s		*drm;
 #	endif
 
+	char		*host;
+	unsigned	port;
+	bool 		tcp;
+
 	us_stream_runtime_s	*run;
 } us_stream_s;
 

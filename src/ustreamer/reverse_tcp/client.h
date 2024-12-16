@@ -2,7 +2,7 @@
 #                                                                            #
 #    uStreamer - Lightweight and fast MJPEG-HTTP streamer.                   #
 #                                                                            #
-#    Copyright (C) 2018-2024  Maxim Devaev <mdevaev@gmail.com>               #
+#    Copyright (C) 2018-2023  Maxim Devaev <mdevaev@gmail.com>               #
 #                                                                            #
 #    This program is free software: you can redistribute it and/or modify    #
 #    it under the terms of the GNU General Public License as published by    #
@@ -24,49 +24,54 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdbool.h>
+#include <stdatomic.h>
 #include <string.h>
-#include <strings.h>
-#include <ctype.h>
-#include <limits.h>
-#include <getopt.h>
-#include <errno.h>
+#include <inttypes.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <assert.h>
 
-#include "../libs/const.h"
-#include "../libs/logging.h"
-#include "../libs/process.h"
-#include "../libs/frame.h"
-#include "../libs/memsink.h"
-#include "../libs/options.h"
-#include "../libs/capture.h"
-#ifdef WITH_V4P
-#	include "../libs/drm/drm.h"
-#endif
+#include <arpa/inet.h> 
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <netinet/tcp.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
 
-#include "encoder.h"
-#include "stream.h"
-#include "http/server.h"
-#ifdef WITH_GPIO
-#	include "gpio/gpio.h"
-#endif
+#include "../../libs/tools.h"
+#include "../../libs/threading.h"
+#include "../../libs/logging.h"
+#include "../../libs/process.h"
+#include "../../libs/frame.h"
+#include "../../libs/base64.h"
+#include "../../libs/list.h"
 
+#include "../stream.h"
 
 typedef struct {
-	unsigned		argc;
-	char			**argv;
-	char			**argv_copy;
-	us_memsink_s	*jpeg_sink;
-	us_memsink_s	*raw_sink;
-	us_memsink_s	*h264_sink;
-#	ifdef WITH_V4P
-	us_drm_s		*drm;
-#	endif
-	bool			reverse_tcp;
-} us_options_s;
+    int                 sockfd;
+    long double			last_checked_fps;
+    unsigned int        fps_sended;
+	us_stream_s			*stream;
+    atomic_bool         connected;
+    atomic_bool         stop;
+} us_reversetcp_runtime_s;
 
+typedef struct us_reversetcp_sx {
+	char		 *host;
+	unsigned	 port;
+    unsigned int retry_sec;
 
-us_options_s *us_options_init(unsigned argc, char *argv[]);
-void us_options_destroy(us_options_s *options);
+    us_reversetcp_runtime_s *run;
+} us_reversetcp_s;
 
-int options_parse(us_options_s *options, us_capture_s *cap, us_encoder_s *enc, us_stream_s *stream, us_server_s *server);
+us_reversetcp_s *us_reversetcp_init(us_stream_s *stream);
+void us_reversetcp_destroy(us_reversetcp_s *tcp);
+
+bool us_reversetcp_connect(us_reversetcp_s *tcp);
+void us_reversetcp_loop(us_reversetcp_s *tcp);
+void us_reversetcp_loop_break(us_reversetcp_s *tcp);
