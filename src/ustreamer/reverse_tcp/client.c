@@ -26,8 +26,8 @@
 #define _STREAM(x_next)	_RUN(stream->x_next)
 #define _VID(x_next)	_STREAM(run->video->x_next)
 
-us_tcp_s *us_reversetcp_init(us_stream_s *stream) {
-	us_tcp_runtime_s *run;
+us_reversetcp_s *us_reversetcp_init(us_stream_s *stream) {
+	us_reversetcp_runtime_s *run;
 	US_CALLOC(run, 1);
 	run->stream = stream;
     atomic_init(&run->stop, false);
@@ -36,7 +36,7 @@ us_tcp_s *us_reversetcp_init(us_stream_s *stream) {
     run->last_checked_fps = us_get_now_monotonic();
     run->fps_sended = 0;
 
-	us_tcp_s *tcp;
+	us_reversetcp_s *tcp;
 	US_CALLOC(tcp, 1);
 	tcp->host = "127.0.0.1";
 	tcp->port = 1337;
@@ -46,14 +46,14 @@ us_tcp_s *us_reversetcp_init(us_stream_s *stream) {
 	return tcp;
 }
 
-void us_reversetcp_destroy(us_tcp_s *tcp) {
+void us_reversetcp_destroy(us_reversetcp_s *tcp) {
     US_LOG_INFO("Destroying tcp ...")
     close(_RUN(sockfd));
 	free(tcp->run);
 	free(tcp);
 }
 
-bool us_reversetcp_connect(us_tcp_s *tcp) {
+bool us_reversetcp_connect(us_reversetcp_s *tcp) {
     if (!(_RUN(sockfd) < 0)) {
         close(_RUN(sockfd));
     }
@@ -79,7 +79,7 @@ bool us_reversetcp_connect(us_tcp_s *tcp) {
     return true;
 }
 
-void us_reversetcp_loop(us_tcp_s *tcp) {
+void us_reversetcp_loop(us_reversetcp_s *tcp) {
     US_LOG_DEBUG("Starting TCP Loop.")
     while (!atomic_load(&_RUN(stop))) {
         if (!atomic_load(&_RUN(connected))) {
@@ -126,7 +126,7 @@ void us_reversetcp_loop(us_tcp_s *tcp) {
     }
 }
 
-void us_reversetcp_loop_break(us_tcp_s *tcp) {
+void us_reversetcp_loop_break(us_reversetcp_s *tcp) {
     US_LOG_DEBUG("Break TCP Loop.")
     atomic_store(&_RUN(stop), true);
 }
