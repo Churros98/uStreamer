@@ -22,6 +22,14 @@
 
 #include "client.h"
 
+#include "../../libs/types.h"
+#include "../../libs/tools.h"
+#include "../../libs/threading.h"
+#include "../../libs/logging.h"
+#include "../../libs/process.h"
+#include "../../libs/frame.h"
+#include "../../libs/ring.h"
+
 #define _RUN(x_next)	tcp->run->x_next
 #define _STREAM(x_next)	_RUN(stream->x_next)
 #define _VID(x_next)	_STREAM(run->video->x_next)
@@ -83,7 +91,7 @@ void us_reversetcp_loop(us_reversetcp_s *tcp) {
     US_LOG_DEBUG("Starting TCP Loop.")
     while (!atomic_load(&_RUN(stop))) {
         if (!atomic_load(&_RUN(connected))) {
-            if (!us_tcp_connect(tcp)) {
+            if (!us_reversetcp_connect(tcp)) {
                 US_LOG_INFO("Retrying in %u second(s).", tcp->retry_sec)
                 usleep(1000000 * tcp->retry_sec);
             }
@@ -92,8 +100,9 @@ void us_reversetcp_loop(us_reversetcp_s *tcp) {
 
     	const long double now = us_get_now_monotonic();
 
-        if (atomic_load(&_VID(updated))) {
-            US_MUTEX_LOCK(_VID(mutex));
+        const int ri = us_ring_consumer_acquire(ring, 0);
+        if (ri >= 0) {
+            const us_frame_s *const frame = ring->items[ri];
 
             if (send(_RUN(sockfd), (const void *)&_VID(frame->used), sizeof(size_t), 0) < 0) {
                 goto socketerror;
@@ -104,8 +113,7 @@ void us_reversetcp_loop(us_reversetcp_s *tcp) {
                 US_LOG_ERROR("Unable to send message, server disconnected (%i).", errno)
                 US_LOG_ERROR("Retrying in %u second(s).", tcp->retry_sec)
 
-                US_MUTEX_UNLOCK(_VID(mutex));
-                atomic_store(&_VID(updated), false);
+                us_ring_consumer_release(ring, ri);
                 atomic_store(&_RUN(connected), false);
                 usleep(1000000 * tcp->retry_sec);
                 continue;
@@ -114,8 +122,7 @@ void us_reversetcp_loop(us_reversetcp_s *tcp) {
                 _RUN(fps_sended) = _RUN(fps_sended) + 1;
             }
 
-            US_MUTEX_UNLOCK(_VID(mutex));
-            atomic_store(&_VID(updated), false);
+            us_ring_consumer_release(ring, ri);
         }
 
         if ((now - _RUN(last_checked_fps)) > 1) {
