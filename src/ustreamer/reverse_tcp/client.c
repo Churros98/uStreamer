@@ -81,12 +81,15 @@ bool us_reversetcp_connect(us_reversetcp_s *tcp) {
         return false;
     }
 
+    atomic_store(&tcp->run->stream->run->http->has_clients, true);
     atomic_store(&_RUN(connected), true);
     return true;
 }
 
 void us_reversetcp_loop(us_reversetcp_s *tcp) {
     US_LOG_DEBUG("Starting TCP Loop.")
+    us_ring_s *const ring = tcp->run->stream->run->http->jpeg_ring;
+
     while (!atomic_load(&_RUN(stop))) {
         if (!atomic_load(&_RUN(connected))) {
             if (!us_reversetcp_connect(tcp)) {
@@ -110,6 +113,8 @@ void us_reversetcp_loop(us_reversetcp_s *tcp) {
                 socketerror:
                 US_LOG_ERROR("Unable to send message, server disconnected (%i).", errno)
                 US_LOG_ERROR("Retrying in %u second(s).", tcp->retry_sec)
+
+                atomic_store(&tcp->run->stream->run->http->has_clients, false);
 
                 us_ring_consumer_release(ring, ri);
                 atomic_store(&_RUN(connected), false);
