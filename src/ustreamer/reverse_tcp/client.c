@@ -59,6 +59,11 @@ void us_reversetcp_destroy(us_reversetcp_s *tcp) {
 	free(tcp);
 }
 
+void us_reversetcp_loop_break(us_reversetcp_s *tcp) {
+    US_LOG_DEBUG("Break TCP Loop.")
+    atomic_store(&_RUN(stop), true);
+}
+
 bool us_reversetcp_connect(us_reversetcp_s *tcp) {
     if (!(_RUN(sockfd) < 0)) {
         close(_RUN(sockfd));
@@ -133,10 +138,9 @@ void us_reversetcp_loop(us_reversetcp_s *tcp) {
             _RUN(last_checked_fps) = now;
             _RUN(fps_sended) = 0;
         }
-    }
-}
 
-void us_reversetcp_loop_break(us_reversetcp_s *tcp) {
-    US_LOG_DEBUG("Break TCP Loop.")
-    atomic_store(&_RUN(stop), true);
+        if (atomic_load(&_RUN(stop))) {
+            break;
+        }
+    }
 }

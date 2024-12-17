@@ -82,6 +82,7 @@ static void _signal_handler(int signum) {
 	free(name);
 	us_stream_loop_break(_g_stream);
 	us_server_loop_break(_g_server);
+	us_reversetcp_loop_break(_g_reversetcp);
 }
 
 int main(int argc, char *argv[]) {
