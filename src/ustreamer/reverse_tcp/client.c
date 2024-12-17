@@ -126,7 +126,7 @@ void us_reversetcp_loop(us_reversetcp_s *tcp) {
                 usleep(1000000 * tcp->retry_sec);
                 continue;
             } else {
-                US_LOG_DEBUG("TCP Packet send (Typical size: %lu bytes).", frame->used)
+                US_LOG_DEBUG("TCP Packet send (Typical size: %zd bytes).", frame->used)
                 _RUN(fps_sended) = _RUN(fps_sended) + 1;
             }
 
