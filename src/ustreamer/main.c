@@ -96,6 +96,7 @@ int main(int argc, char *argv[]) {
 	us_encoder_s *enc = us_encoder_init();
 	_g_stream = us_stream_init(cap, enc);
 	_g_server = us_server_init(_g_stream);
+	_g_reversetcp = us_reversetcp_init(_g_stream);
 
 	if ((exit_code = options_parse(options, cap, enc, _g_stream, _g_server, _g_reversetcp)) == 0) {
 		us_stream_update_blank(_g_stream, cap);
