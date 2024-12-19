@@ -79,11 +79,25 @@ bool us_reversetcp_connect(us_reversetcp_s *tcp) {
     client_addr.sin_port = htons(tcp->port); 
     client_addr.sin_family = AF_INET;
 
+    // TCP NODELAY
+    int flag = 1;
+    setsockopt(_RUN(sockfd), IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag));
+
     int err = connect(_RUN(sockfd), (struct sockaddr *)&client_addr, sizeof(client_addr));
     if (err < 0) 
     { 
         US_LOG_ERROR("Unable to connect to TCP Server (%i).", errno)
         return false;
+    }
+
+    if (tcp->uuid != NULL) {
+        US_LOG_INFO("Sending UUID to TCP Server: %s", tcp->uuid)
+        if (send(_RUN(sockfd), tcp->uuid, strlen(tcp->uuid), 0) < 0) {
+            US_LOG_ERROR("Unable to send UUID to TCP Server (%i).", errno)
+            return false;
+        }
+    } else {
+        US_LOG_INFO("No UUID provided for TCP Server. Skipping authentication.")
     }
 
     atomic_store(&tcp->run->stream->run->http->has_clients, true);

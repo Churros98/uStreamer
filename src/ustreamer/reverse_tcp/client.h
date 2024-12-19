@@ -62,9 +62,10 @@ typedef struct {
 } us_reversetcp_runtime_s;
 
 typedef struct us_reversetcp_sx {
+    char         *uuid;
 	char		 *host;
-	unsigned	 port;
-    unsigned int retry_sec;
+	unsigned	  port;
+    unsigned int  retry_sec;
 
     us_reversetcp_runtime_s *run;
 } us_reversetcp_s;

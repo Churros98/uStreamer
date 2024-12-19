@@ -52,6 +52,7 @@ enum _US_OPT_VALUES {
 #	ifdef WITH_SYSTEMD
 	_O_SYSTEMD = 'S',
 #	endif
+	_O_UUID = 'U',
 	_O_REVERSETCP = 'Z',
 	_O_RETRY_SEC = 'x',
 	_O_DROP_SAME_FRAMES = 'e',
@@ -180,6 +181,7 @@ static const struct option _LONG_OPTS[] = {
 	{"unix",					required_argument,	NULL,	_O_UNIX},
 	{"unix-rm",					no_argument,		NULL,	_O_UNIX_RM},
 	{"unix-mode",				required_argument,	NULL,	_O_UNIX_MODE},
+	{"uuid",					required_argument,	NULL,	_O_UUID},
 	{"reverse-tcp",				no_argument,		NULL,	_O_REVERSETCP},
 	{"retry-sec",				required_argument,	NULL,	_O_RETRY_SEC},
 #	ifdef WITH_SYSTEMD
@@ -434,8 +436,9 @@ int options_parse(us_options_s *options, us_capture_s *cap, us_encoder_s *enc, u
 			case _O_ROTATE:				 	OPT_CTL_MANUAL(rotate);
 			case _O_FLIP_VERTICAL:			OPT_CTL_MANUAL(flip_vertical);
 			case _O_FLIP_HORIZONTAL:		OPT_CTL_MANUAL(flip_horizontal);
-			case _O_REVERSETCP:			OPT_SET(options->reverse_tcp, true);
-			case _O_RETRY_SEC:			OPT_NUMBER("--retry-sec", tcp->retry_sec, 1, 3600, 0);
+			case _O_REVERSETCP:				OPT_SET(options->reverse_tcp, true);
+			case _O_UUID:					OPT_SET(tcp->uuid, optarg);
+			case _O_RETRY_SEC:				OPT_NUMBER("--retry-sec", tcp->retry_sec, 1, 3600, 0);
 			case _O_HOST:
 				if (options->reverse_tcp) {
 					OPT_SET(tcp->host, optarg);
@@ -727,6 +730,7 @@ static void _help(FILE *fp, const us_capture_s *cap, const us_encoder_s *enc, co
 	SAY("Reverse TCP options:");
 	SAY("════════════════════");
 	SAY("    -Z|--reverse-tcp  ───────────────────────── Disable HTTP Server and send JPEG Frame over TCP. Default: false.\n");
+	SAY("    -U|--uuid <str>  ───────────────────────── UUID Authentication for reverse TCP connection. Default: disabled.\n");
 	SAY("    -s|--host <address>  ────────────────── Coonnect on Hostname or IP. Default: %s.\n", tcp->host);
 	SAY("    -p|--port <N>  ──────────────────────── Connection port. Default: %u.\n", tcp->port);
 	SAY("    -x|--retry-sec <N>  ──────────────────────── Time in second(s) before retry to connect if failure. Default: %u.\n", tcp->retry_sec);
