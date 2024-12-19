@@ -52,7 +52,7 @@ enum _US_OPT_VALUES {
 #	ifdef WITH_SYSTEMD
 	_O_SYSTEMD = 'S',
 #	endif
-	_O_UUID = 'U',
+	_O_UUID = 'u',
 	_O_REVERSETCP = 'Z',
 	_O_RETRY_SEC = 'x',
 	_O_DROP_SAME_FRAMES = 'e',
