@@ -1,0 +1,54 @@
+name: Build and Release Binary
+on:
+  push:
+    branches: [master, build_*]
+    tags: [v*]
+  pull_request:
+    branches: [master]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [amd64, arm64, armv7, armv6]
+        include:
+          - arch: amd64
+            gcc_arch: x86_64-linux-gnu
+          - arch: arm64
+            gcc_arch: aarch64-linux-gnu
+          - arch: armv7
+            gcc_arch: arm-linux-gnueabihf
+          - arch: armv6
+            gcc_arch: arm-linux-gnueabi
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up cross-compilation
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y crossbuild-essential-${{ matrix.arch }} libjpeg-dev:${{ matrix.arch }} libevent-dev:${{ matrix.arch }}
+      - name: Build binary
+        run: |
+          make CC=${{ matrix.gcc_arch }}-gcc
+          mv ustreamer ustreamer-${{ matrix.arch }}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ustreamer-${{ matrix.arch }}
+          path: ustreamer-${{ matrix.arch }}
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ustreamer-*/ustreamer-*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
