@@ -10,24 +10,18 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch: [amd64, arm64, armhf, armel]
         include:
           - arch: amd64
             gcc_arch: x86_64-linux-gnu
           - arch: arm64
             gcc_arch: aarch64-linux-gnu
-          - arch: armhf
-            gcc_arch: arm-linux-gnueabihf
-          - arch: armel
-            gcc_arch: arm-linux-gnueabi
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Set up cross-compilation
+      - name: Install dependencies
         run: |
-          sudo dpkg --add-architecture ${{ matrix.arch }}
           sudo apt-get update
-          sudo apt-get install -y crossbuild-essential-${{ matrix.arch }} libjpeg-dev:${{ matrix.arch }} libevent-dev:${{ matrix.arch }}
+          sudo apt-get install -y gcc-aarch64-linux-gnu libjpeg-dev libevent-dev
       - name: Build binary
         run: |
           make CC=${{ matrix.gcc_arch }}-gcc
