@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu libjpeg-dev libevent-dev
+          sudo apt-get install -y gcc-aarch64-linux-gnu libjpeg-dev libevent-dev libbsd-dev
       - name: Build binary
         run: |
           make CC=${{ matrix.gcc_arch }}-gcc
