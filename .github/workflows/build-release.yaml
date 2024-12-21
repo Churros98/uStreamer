@@ -15,8 +15,8 @@ jobs:
             runs-on: ubuntu-latest
             gcc_arch: gcc
           - arch: arm64
-            runs-on: ubuntu-latest-arm64
-            gcc_arch: gcc
+            runs-on: ubuntu-latest
+            gcc_arch: aarch64-linux-gnu-gcc
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -24,6 +24,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libjpeg-dev libevent-dev libbsd-dev
+          if [ "${{ matrix.arch }}" = "arm64" ]; then
+            sudo apt-get install -y gcc-aarch64-linux-gnu qemu-user
+            sudo apt-get install -y crossbuild-essential-arm64
+          fi
       - name: Build binary
         run: |
           make CC=${{ matrix.gcc_arch }}
