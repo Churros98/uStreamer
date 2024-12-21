@@ -22,7 +22,18 @@ jobs:
         run: |
           if [ "${{ matrix.arch }}" = "arm64" ]; then
             sudo dpkg --add-architecture arm64
-            sudo sed -i 's/deb http/deb [arch=amd64,arm64] http/g' /etc/apt/sources.list
+            sudo tee -a /etc/apt/sources.list > /dev/null <<EOL
+            deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main restricted
+            deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted
+            deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy universe
+            deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates universe
+            deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy multiverse
+            deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates multiverse
+            deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-backports main restricted universe multiverse
+            deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted
+            deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security universe
+            deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security multiverse
+            EOL
             sudo apt-get update
             sudo apt-get install -y gcc-aarch64-linux-gnu
             sudo apt-get install -y crossbuild-essential-arm64
