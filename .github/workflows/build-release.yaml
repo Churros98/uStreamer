@@ -31,7 +31,10 @@ jobs:
       - name: Build binary
         run: |
           if [ "${{ matrix.arch }}" = "arm64" ]; then
-            export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig
+            ls -la /usr/include/
+            ls -la /usr/lib/
+            export CFLAGS="-I/usr/include -I/usr/include/x86_64-linux-gnu"
+            export LDFLAGS="-L/usr/lib -L/usr/lib/x86_64-linux-gnu"
           fi
           make CC=${{ matrix.gcc_arch }}
           mv ustreamer ustreamer-${{ matrix.arch }}
