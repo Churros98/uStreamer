@@ -7,44 +7,26 @@ on:
     branches: [master]
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
         include:
           - arch: amd64
-            gcc_arch: x86_64-linux-gnu
+            runs-on: ubuntu-latest
+            gcc_arch: gcc
           - arch: arm64
-            gcc_arch: aarch64-linux-gnu
+            runs-on: ubuntu-latest-arm64
+            gcc_arch: gcc
     steps:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Install dependencies
         run: |
-          if [ "${{ matrix.arch }}" = "arm64" ]; then
-            sudo dpkg --add-architecture arm64
-            sudo sed -i 's/deb http/deb [arch=amd64] http/g' /etc/apt/sources.list
-            sudo bash -c 'cat >> /etc/apt/sources.list << "
-            deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main restricted \
-            deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted \
-            deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy universe \
-            deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates universe \
-            deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy multiverse \
-            deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates multiverse \
-            deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-backports main restricted universe multiverse \
-            deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted \
-            deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security universe \
-            deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security multiverse"'
-            sudo apt-get update
-            sudo apt-get install -y gcc-aarch64-linux-gnu
-            sudo apt-get install -y crossbuild-essential-arm64
-            sudo apt-get install -y libjpeg-dev:arm64 libevent-dev:arm64 libbsd-dev:arm64
-          else
-            sudo apt-get update
-            sudo apt-get install -y libjpeg-dev libevent-dev libbsd-dev
-          fi
+          sudo apt-get update
+          sudo apt-get install -y libjpeg-dev libevent-dev libbsd-dev
       - name: Build binary
         run: |
-          make CC=${{ matrix.gcc_arch }}-gcc
+          make CC=${{ matrix.gcc_arch }}
           mv ustreamer ustreamer-${{ matrix.arch }}
       - name: Upload artifact
         uses: actions/upload-artifact@v3
