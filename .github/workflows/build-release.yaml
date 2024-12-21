@@ -20,9 +20,16 @@ jobs:
         uses: actions/checkout@v3
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu libjpeg-dev libevent-dev libbsd-dev
-          sudo apt-get install -y libjpeg-dev:arm64 libevent-dev:arm64 libbsd-dev:arm64
+          if [ "${{ matrix.arch }}" = "arm64" ]; then
+            sudo dpkg --add-architecture arm64
+            sudo apt-get update
+            sudo apt-get install -y gcc-aarch64-linux-gnu
+            sudo apt-get install -y crossbuild-essential-arm64
+            sudo apt-get install -y libjpeg-dev:arm64 libevent-dev:arm64 libbsd-dev:arm64
+          else
+            sudo apt-get update
+            sudo apt-get install -y libjpeg-dev libevent-dev libbsd-dev
+          fi
       - name: Build binary
         run: |
           make CC=${{ matrix.gcc_arch }}-gcc
