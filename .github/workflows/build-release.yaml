@@ -27,10 +27,12 @@ jobs:
           if [ "${{ matrix.arch }}" = "arm64" ]; then
             sudo apt-get install -y gcc-aarch64-linux-gnu qemu-user
             sudo apt-get install -y crossbuild-essential-arm64
-            sudo apt-get install -y libjpeg-dev:arm64 libevent-dev:arm64 libbsd-dev:arm64
           fi
       - name: Build binary
         run: |
+          if [ "${{ matrix.arch }}" = "arm64" ]; then
+            export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig
+          fi
           make CC=${{ matrix.gcc_arch }}
           mv ustreamer ustreamer-${{ matrix.arch }}
       - name: Upload artifact
