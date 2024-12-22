@@ -68,3 +68,10 @@ jobs:
           platforms: linux/arm64,linux/amd64,linux/arm/v6,linux/arm/v7
           outputs: type=local,dest=./build-multiarch
           file: pkg/docker/Dockerfile.alpine
+      -
+        name: Archive multiarch artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-multiarch
+          path: |
+            build-multiarch
