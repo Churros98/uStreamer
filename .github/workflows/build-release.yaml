@@ -20,23 +20,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libjpeg-dev libevent-dev libbsd-dev
-          if [ "${{ matrix.arch }}" = "arm64" ]; then
-            sudo apt-get install -y gcc-aarch64-linux-gnu qemu-user
-            sudo apt-get install -y crossbuild-essential-arm64
-          fi
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
       - name: Build binary
         run: |
-          if [ "${{ matrix.arch }}" = "arm64" ]; then
-            ls -la /usr/include/
-            ls -la /usr/lib/
-            export CFLAGS="-I/usr/include -I/usr/include/x86_64-linux-gnu"
-            export LDFLAGS="-L/usr/lib -L/usr/lib/x86_64-linux-gnu"
-          fi
-          make CC=${{ matrix.gcc_arch }}
+          docker buildx build \
+            --platform linux/${{ matrix.arch }} \
+            --build-arg CC=${{ matrix.gcc_arch }} \
+            --output type=local,dest=. \
+            -f Dockerfile .
           mv ustreamer ustreamer-${{ matrix.arch }}
       - name: Upload artifact
         uses: actions/upload-artifact@v3
