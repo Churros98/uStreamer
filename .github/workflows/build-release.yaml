@@ -30,6 +30,7 @@ jobs:
           fi
       - name: List files
         run: |
+          find -name jconfig.h
           ls -lisa /usr/include/
           ls -lisa /usr/lib/
 
