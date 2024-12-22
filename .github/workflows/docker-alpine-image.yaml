@@ -68,35 +68,14 @@ jobs:
           context: .
           platforms: linux/arm64,linux/amd64,linux/arm/v6,linux/arm/v7
           file: pkg/docker/Dockerfile.alpine
-          tags: ustreamer-multiarch
       -
-        name: Extract binaries
-        run: |
-          for platform in "linux/amd64" "linux/arm64" "linux/arm/v7" "linux/arm/v6"; do
-            echo "Extracting for $platform"
-            
-            arch=$(echo $platform | cut -d/ -f2)
-            variant=$(echo $platform | cut -d/ -f3)
-            
-            if [ -n "$variant" ]; then
-              filename="ustreamer-linux-${arch}-${variant}"
-            else
-              filename="ustreamer-linux-${arch}"
-            fi
-            
-            container_id=$(docker create --platform $platform ustreamer-multiarch)
-            mkdir -p dist
-            docker cp $container_id:/usr/local/bin/ustreamer "dist/$filename"
-            docker rm $container_id
-          done
-          
-          cd dist
-          for binary in *; do
-            tar czf "$binary.tar.gz" "$binary"
-            rm "$binary"
-          done
-      -
-        name: Upload binaries to release
-        uses: softprops/action-gh-release@v1
+        name: Push
+        if: steps.meta.outputs.tags != ''
+        uses: docker/build-push-action@v3
         with:
-          files: dist/*.tar.gz
+          context: .
+          platforms: linux/arm64,linux/amd64,linux/arm/v7
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          file: pkg/docker/Dockerfile.alpine
