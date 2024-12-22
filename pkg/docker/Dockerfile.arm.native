@@ -3,10 +3,13 @@ FROM balenalib/raspberrypi3-debian:build as build
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
 		gcc \
+		libjpeg-turbo-dev \
 		libjpeg8-dev \
 		libbsd-dev \
 		libgpiod-dev \
 	&& rm -rf /var/lib/apt/lists/*
+
+RUN ls -l /usr/lib/
 
 WORKDIR /build/ustreamer/
 COPY . .
