@@ -49,12 +49,11 @@ jobs:
         with:
           driver-opts: image=moby/buildkit:master
       -
-        name: Build and export to Docker
+        name: Build and export artifacts
         uses: docker/build-push-action@v3
         with:
           context: .
-          load: true
-          tags: ustreamer
+          outputs: type=local,dest=./build
           file: pkg/docker/Dockerfile.alpine
       -
         name: Test
@@ -62,20 +61,10 @@ jobs:
           echo version: $(docker run --rm -t ustreamer --version)
           echo -e "features:\n$(docker run --rm -t ustreamer --features)"
       -
-        name: Build multi arch
+        name: Build multi arch and export artifacts
         uses: docker/build-push-action@v3
         with:
           context: .
           platforms: linux/arm64,linux/amd64,linux/arm/v6,linux/arm/v7
-          file: pkg/docker/Dockerfile.alpine
-      -
-        name: Push
-        if: steps.meta.outputs.tags != ''
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          platforms: linux/arm64,linux/amd64,linux/arm/v7
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=local,dest=./build-multiarch
           file: pkg/docker/Dockerfile.alpine
