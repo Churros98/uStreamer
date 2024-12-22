@@ -39,10 +39,23 @@ jobs:
           platforms: linux/arm64,linux/amd64,linux/arm/v6,linux/arm/v7
           outputs: type=local,dest=./build-multiarch
           file: pkg/docker/Dockerfile.alpine
+
+      - 
+        name: Rename local file for match architecture
+        run: |
+          mv ./build-multiarch/linux_arm64/ustreamer/ustreamer ./build-multiarch/linux_arm64/ustreamer/ustreamer-arm64
+          mv ./build-multiarch/linux_amd64/ustreamer/ustreamer ./build-multiarch/linux_amd64/ustreamer/ustreamer-amd64
+          mv ./build-multiarch/linux_arm_v7/ustreamer/ustreamer ./build-multiarch/linux_arm_v7/ustreamer/ustreamer-armv7
+          mv ./build-multiarch/linux_arm_v6/ustreamer/ustreamer ./build-multiarch/linux_arm_v6/ustreamer/ustreamer-armv6
       -
         name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           name: rctelemetrie (ARMv7)
-          files: build-multiarch.zip
+          files: |
+            ./build-multiarch/linux_arm64/ustreamer/ustreamer-arm64
+            ./build-multiarch/linux_amd64/ustreamer/ustreamer-amd64
+            ./build-multiarch/linux_arm_v7/ustreamer/ustreamer-armv7
+            ./build-multiarch/linux_arm_v6/ustreamer/ustreamer-armv6
+          fail_on_unmatched_files: true
           token: ${{ secrets.GH_TOKEN }}
