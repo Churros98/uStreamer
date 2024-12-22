@@ -7,6 +7,8 @@ RUN apk add --no-cache \
 		libbsd-dev \
 		libgpiod-dev
 
+RUN ls -l /usr/lib/
+
 WORKDIR /build/ustreamer/
 COPY . .
 RUN make -j5 WITH_GPIO=1
