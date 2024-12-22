@@ -2,25 +2,19 @@ R_DESTDIR ?=
 PREFIX ?= /usr/local
 
 CC ?= gcc
-CFLAGS ?= -O3
-LDFLAGS ?=
-
+CFLAGS ?= -O3 -I/usr/include/aarch64-linux-gnu/
+LDFLAGS ?= -L/usr/lib/aarch64-linux-gnu/
 
 # =====
 _USTR = ustreamer.bin
 _DUMP = ustreamer-dump.bin
 _V4P = ustreamer-v4p.bin
 
-_CFLAGS = -MD -c -std=c17 -Wall -Wextra -D_GNU_SOURCE $(CFLAGS) \
-	$(shell pkg-config --cflags libjpeg) \
-	$(shell pkg-config --cflags libevent)
+_CFLAGS = -MD -c -std=c17 -Wall -Wextra -D_GNU_SOURCE $(CFLAGS)
 
-_COMMON_LIBS = -static $(shell pkg-config --libs libjpeg) -lm -pthread -lrt -latomic
-_USTR_LDFLAGS = $(LDFLAGS) $(_COMMON_LIBS) \
-	$(shell pkg-config --libs libevent) \
-	$(shell pkg-config --libs libevent_pthreads)
-_DUMP_LDFLAGS = $(LDFLAGS) $(_COMMON_LIBS)
-_V4P_LDFLAGS = $(LDFLAGS) $(_COMMON_LIBS)
+_USTR_LDFLAGS = $(LDFLAGS) -lm -ljpeg -pthread -lrt -latomic -levent -levent_pthreads
+_DUMP_LDFLAGS = $(LDFLAGS) -lm -ljpeg -pthread -lrt -latomic
+_V4P_LDFLAGS = $(LDFLAGS) -lm -ljpeg -pthread -lrt -latomic
 
 _USTR_SRCS = $(shell ls \
 	libs/*.c \
