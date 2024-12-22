@@ -28,15 +28,20 @@ jobs:
             sudo apt-get install -y gcc-aarch64-linux-gnu
             sudo apt-get install -y crossbuild-essential-arm64
           fi
-      - name: Build binary
+      - name: List files
         run: |
-          make CC=${{ matrix.gcc_arch }}
-          mv ustreamer ustreamer-${{ matrix.arch }}
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: ustreamer-${{ matrix.arch }}
-          path: ustreamer-${{ matrix.arch }}
+          ls -lisa /usr/include/
+          ls -lisa /usr/lib/
+
+    #   - name: Build binary
+    #     run: |
+    #       make CC=${{ matrix.gcc_arch }}
+    #       mv ustreamer ustreamer-${{ matrix.arch }}
+    #   - name: Upload artifact
+    #     uses: actions/upload-artifact@v3
+    #     with:
+    #       name: ustreamer-${{ matrix.arch }}
+    #       path: ustreamer-${{ matrix.arch }}
   release:
     needs: build
     if: startsWith(github.ref, 'refs/tags/v')
