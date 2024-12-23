@@ -12,10 +12,10 @@ jobs:
       matrix:
         include:
           - arch: amd64
-            runs-on: ubuntu-latest
+            runs-on: ubuntu-20.04
             gcc_arch: gcc
           - arch: arm64
-            runs-on: ubuntu-latest
+            runs-on: ubuntu-20.04
             gcc_arch: aarch64-linux-gnu-gcc
     steps:
       - name: Checkout
@@ -27,22 +27,17 @@ jobs:
           if [ "${{ matrix.arch }}" = "arm64" ]; then
             sudo apt-get install -y gcc-aarch64-linux-gnu
             sudo apt-get install -y crossbuild-essential-arm64
+            sudo apt-get install -y libjpeg-dev:arm64 libevent-dev:arm64 libbsd-dev:arm64
           fi
-      - name: List files
+      - name: Build binary
         run: |
-          find / -name jconfig.h
-          ls -lisa /usr/include/
-          ls -lisa /usr/lib/
-
-    #   - name: Build binary
-    #     run: |
-    #       make CC=${{ matrix.gcc_arch }}
-    #       mv ustreamer ustreamer-${{ matrix.arch }}
-    #   - name: Upload artifact
-    #     uses: actions/upload-artifact@v3
-    #     with:
-    #       name: ustreamer-${{ matrix.arch }}
-    #       path: ustreamer-${{ matrix.arch }}
+          make CC=${{ matrix.gcc_arch }}
+          mv ustreamer ustreamer-${{ matrix.arch }}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ustreamer-${{ matrix.arch }}
+          path: ustreamer-${{ matrix.arch }}
   release:
     needs: build
     if: startsWith(github.ref, 'refs/tags/v')
