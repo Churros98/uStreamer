@@ -25,9 +25,8 @@ jobs:
         if: matrix.arch == 'arm64'
         run: |
           sudo dpkg --add-architecture arm64
-          sudo sh -c 'echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal main restricted universe multiverse" >> /etc/apt/sources.list'
-          sudo sh -c 'echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal-updates main restricted universe multiverse" >> /etc/apt/sources.list'
-          sudo sh -c 'echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports focal-security main restricted universe multiverse" >> /etc/apt/sources.list'
+          echo "deb [arch=arm64] http://archive.raspbian.org/raspbian bullseye main" | sudo tee /etc/apt/sources.list.d/raspbian.list
+          curl -sSL https://archive.raspbian.org/raspbian.public.key | sudo apt-key add -
       - name: Install dependencies
         run: |
           sudo apt-get update
