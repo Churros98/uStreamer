@@ -11,8 +11,6 @@ RUN apt-get update \
 		libgpiod-dev \
 	&& rm -rf /var/lib/apt/lists/*
 
-RUN ls -l /usr/lib/
-
 WORKDIR /build/ustreamer/
 COPY . .
 RUN make -j5 WITH_GPIO=1

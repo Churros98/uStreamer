@@ -1,0 +1,14 @@
+FROM dockcross/linux-arm64
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        libjpeg-turbo-dev \
+        libjpeg8-dev \
+        libbsd-dev \
+        libgpiod-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build/ustreamer/
+COPY . .
+RUN make -j5 WITH_GPIO=1
+RUN ls -lisa /build/ustreamer/
