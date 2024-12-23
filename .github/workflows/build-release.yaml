@@ -20,12 +20,13 @@ jobs:
           echo "deb http://deb.debian.org/debian bullseye-updates main contrib non-free" >> /etc/apt/sources.list
       - name: Install libraries
         run: |
+          dpkg --add-architecture arm64
           apt-get update
           apt-get install -y --no-install-recommends \
-              libjpeg-turbo-dev \
-              libjpeg8-dev \
-              libbsd-dev \
-              libgpiod-dev
+              libjpeg-turbo-dev:arm64 \
+              libjpeg8-dev:arm64 \
+              libbsd-dev:arm64 \
+              libgpiod-dev:arm64
       - name: Build
         run: |
           make
