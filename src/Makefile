@@ -2,8 +2,8 @@ R_DESTDIR ?=
 PREFIX ?= /usr/local
 
 CC ?= gcc
-CFLAGS ?= -O3
-LDFLAGS ?=
+CFLAGS ?= -O3 -I/usr/include/ -L/usr/lib/
+LDFLAGS ?= -I/usr/include/ -L/usr/lib/
 
 # =====
 _USTR = ustreamer.bin
