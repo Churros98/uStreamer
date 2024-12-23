@@ -12,10 +12,10 @@ jobs:
       matrix:
         include:
           - arch: amd64
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             gcc_arch: gcc
           - arch: arm64
-            runs-on: ubuntu-20.04
+            runs-on: ubuntu-22.04
             gcc_arch: aarch64-linux-gnu-gcc
     steps:
       - name: Checkout
