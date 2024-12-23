@@ -18,13 +18,13 @@ jobs:
           echo "deb http://deb.debian.org/debian bullseye main contrib non-free" >> /etc/apt/sources.list
           echo "deb http://security.debian.org/debian-security bullseye-security main contrib non-free" >> /etc/apt/sources.list
           echo "deb http://deb.debian.org/debian bullseye-updates main contrib non-free" >> /etc/apt/sources.list
+          echo "deb http://raspbian.raspberrypi.org/raspbian/ bullseye main contrib non-free rpi" >> /etc/apt/sources.list
       - name: Install libraries
         run: |
           dpkg --add-architecture arm64
           apt-get update
           apt-get install -y --no-install-recommends \
-              libjpeg-turbo-dev:arm64 \
-              libjpeg8-dev:arm64 \
+              libjpeg62-turbo-dev:arm64 \
               libbsd-dev:arm64 \
               libgpiod-dev:arm64
       - name: Build
