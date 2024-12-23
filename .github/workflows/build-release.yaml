@@ -25,7 +25,7 @@ jobs:
           dpkg --add-architecture armhf
           apt-get update
           apt-get install -y --no-install-recommends \
-              libjpeg8-dev:armhf \
+              libjpeg9-dev:armhf \
               libjpeg62-turbo-dev:armhf \
               libbsd-dev:armhf \
               libgpiod-dev:armhf
