@@ -28,13 +28,9 @@ jobs:
               libjpeg9-dev:armhf \
               libbsd-dev:armhf \
               libgpiod-dev:armhf
-      - name: Find libjpeg
-        run: |
-          echo "Searching for jpeglib.h..."
-          sudo find / -name jpeglib.h
       - name: Build
         run: |
-          make
+          make CFLAGS="-I/usr/include/ -L/usr/lib/"
           ls -lisa .
           mv ustreamer ustreamer-armv7
       - name: Upload artifact
