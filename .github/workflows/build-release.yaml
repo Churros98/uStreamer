@@ -17,7 +17,6 @@ jobs:
         run: |
           apt-get update
           apt-get install -y --no-install-recommends \
-              libjpeg-turbo-dev \
               libbsd-dev \
               libgpiod-dev
       - name: Build
