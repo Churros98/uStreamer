@@ -26,7 +26,6 @@ jobs:
           apt-get update
           apt-get install -y --no-install-recommends \
               libjpeg9-dev:armhf \
-              libjpeg62-turbo-dev:armhf \
               libbsd-dev:armhf \
               libgpiod-dev:armhf
       - name: Build
