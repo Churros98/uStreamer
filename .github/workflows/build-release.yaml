@@ -9,33 +9,36 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: dockcross/linux-arm64
+      image: dockcross/linux-armv7
     steps:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Add repositories
         run: |
-          echo "deb [arch=arm64] http://deb.debian.org/debian bullseye main contrib non-free" >> /etc/apt/sources.list
-          echo "deb [arch=arm64] http://security.debian.org/debian-security bullseye-security main contrib non-free" >> /etc/apt/sources.list
-          echo "deb [arch=arm64] http://deb.debian.org/debian bullseye-updates main contrib non-free" >> /etc/apt/sources.list
+          echo "deb [arch=armhf] http://deb.debian.org/debian bullseye main contrib non-free" >> /etc/apt/sources.list
+          echo "deb [arch=armhf] http://security.debian.org/debian-security bullseye-security main contrib non-free" >> /etc/apt/sources.list
+          echo "deb [arch=armhf] http://deb.debian.org/debian bullseye-updates main contrib non-free" >> /etc/apt/sources.list
+          echo "deb [arch=armhf] http://raspbian.raspberrypi.org/raspbian/ bullseye main contrib non-free rpi" >> /etc/apt/sources.list
+          wget https://archive.raspbian.org/raspbian.public.key -O - | sudo apt-key add -
       - name: Install libraries
         run: |
-          dpkg --add-architecture arm64
+          dpkg --add-architecture armhf
           apt-get update
           apt-get install -y --no-install-recommends \
-              libjpeg62-turbo-dev:arm64 \
-              libbsd-dev:arm64 \
-              libgpiod-dev:arm64
+              libjpeg8-dev:armhf \
+              libjpeg62-turbo-dev:armhf \
+              libbsd-dev:armhf \
+              libgpiod-dev:armhf
       - name: Build
         run: |
           make
           ls -lisa .
-          mv ustreamer ustreamer-arm64
+          mv ustreamer ustreamer-armv7
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ustreamer-arm64
-          path: ustreamer-arm64
+          name: ustreamer-armv7
+          path: ustreamer-armv7
   release:
     needs: build
     if: startsWith(github.ref, 'refs/tags/v')
